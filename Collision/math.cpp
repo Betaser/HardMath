@@ -7,11 +7,11 @@ typedef struct Vector2 {
     double x;
     double y;
 
-    const Vector2 plus(Vector2 vector) {
+    const Vector2 plus(const Vector2 vector) {
         return Vector2 { x + vector.x, y + vector.y }; 
     }
 
-    const Vector2 minus(Vector2 vector) {
+    const Vector2 minus(const Vector2 vector) {
         return Vector2 { x - vector.x, y - vector.y };
     }
 
@@ -48,7 +48,14 @@ RotationMat radToMat(const double rad) {
     return mat;
 }
 
-std::string toString(RotationMat mat) {
+const Vector2 applyRotation(const Vector2 toThis, const RotationMat mat) {
+    return {
+        toThis.x * mat[0][0] + toThis.y * mat[1][0],
+        toThis.x * mat[0][1] + toThis.y * mat[1][1]
+    };
+}
+
+std::string toString(const RotationMat mat) {
     char sprinted[100];
     sprintf(sprinted,
         "[ [%.3f] [%.3f]\n  [%.3f] [%.3f] ]",
@@ -59,7 +66,7 @@ std::string toString(RotationMat mat) {
     return { sprinted };
 }
 
-Line newLine(std::array<Vector2, 2> twoPoints) {
+Line newLine(const std::array<Vector2, 2> twoPoints) {
     const auto p1 = twoPoints[0];
     const auto p2 = twoPoints[1];
 
