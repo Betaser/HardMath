@@ -1,3 +1,4 @@
+#include <cmath>
 #include <array>
 #include <iostream>
 #include <string>
@@ -21,7 +22,7 @@ typedef struct Vector2 {
     std::string toString() const {
         char sprinted[100];
         sprintf(sprinted, "<%.3f, %.3f>", x, y);
-        return std::string(sprinted);
+        return { sprinted };
     }
 } Vector2;
 
@@ -32,9 +33,31 @@ typedef struct Line {
     std::string toString() const {
         char sprinted[100];
         sprintf(sprinted, "m = %.3f, b = %.3f", m, b);
-        return std::string(sprinted);
+        return { sprinted };
     }
 } Line;
+
+typedef std::array<std::array<double, 2>, 2> RotationMat;
+
+RotationMat radToMat(const double rad) {
+    RotationMat mat;
+    mat[0][0] = std::cos(rad);
+    mat[1][0] = -std::sin(rad);
+    mat[0][1] = std::sin(rad);
+    mat[1][1] = std::cos(rad);
+    return mat;
+}
+
+std::string toString(RotationMat mat) {
+    char sprinted[100];
+    sprintf(sprinted,
+        "[ [%.3f] [%.3f]\n  [%.3f] [%.3f] ]",
+        mat[0][0],
+        mat[1][0],
+        mat[0][1],
+        mat[1][1]);
+    return { sprinted };
+}
 
 Line newLine(std::array<Vector2, 2> twoPoints) {
     const auto p1 = twoPoints[0];

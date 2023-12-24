@@ -20,6 +20,7 @@ Vector2 rotationMatMethod(const std::array<Vector2, 2> p1, const std::array<Vect
 }
 
 int main() {
+    std::cout << toString(radToMat(M_PI / 2.0)) << "\n";
     std::cout << "The most iffy part of the rudimentary method of collision detection that I made up is the intersection of two lines.\n";
     std::cout << "Therefore this code is trying to make the intersection as mathematically sound as reasonable, since computers are not perfect calculators.\n";
 
