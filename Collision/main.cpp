@@ -5,72 +5,79 @@
 const auto PI_OVER_4_MAT = radToMat(M_PI / 4.0);
 const auto NEG_PI_OVER_4_MAT = radToMat(-M_PI / 4.0);
 
-Vector2 rotationMatMethod(std::array<Vector2, 2> line1, std::array<Vector2, 2> line2) {
+Vector2 rotationMatMethod(std::array<Vector2, 2> lineSeg1, std::array<Vector2, 2> lineSeg2) {
     // Ok, but what RotationMat do we use?
     // One strat: Push the line that is further away from the closest vertical towards horizontal.
-    // But don't do any rotation when the lines are both very far away from vertical already.
+    // TODO: But don't do any rotation when the lines are both very far away from vertical already.
 
-    const double dx1 = line1[0].x - line1[1].x;
-    const double dy1 = line1[0].y - line1[1].y;
-    const double dx2 = line2[0].x - line2[1].x;
-    const double dy2 = line2[0].y - line2[1].y;
+    const double dx1 = lineSeg1[0].x - lineSeg1[1].x;
+    const double dy1 = lineSeg1[0].y - lineSeg1[1].y;
+    const double dx2 = lineSeg2[0].x - lineSeg2[1].x;
+    const double dy2 = lineSeg2[0].y - lineSeg2[1].y;
 
-    RotationMat mat, invMat;
-
-    // cross multiplication comparison of the slopes
-    if (std::abs(dy1 * dx2) > std::abs(dx1 * dy1)) {
-        std::cout << "line1 is closer to vertical\n";
-        
-        if (dx2 < 0) {
-            mat = PI_OVER_4_MAT;
-            invMat = NEG_PI_OVER_4_MAT;
-        } else {
-            mat = NEG_PI_OVER_4_MAT;
-            invMat = PI_OVER_4_MAT;
-        }
-    } else {
-        std::cout << "line2 is closer to vertical\n";
-
-        if (dx1 < 0) {
-            mat = PI_OVER_4_MAT;
-            invMat = NEG_PI_OVER_4_MAT;
-        } else {
-            mat = NEG_PI_OVER_4_MAT;
-            invMat = PI_OVER_4_MAT;
-        }
-    }
-
+    const double VERT_ENOUGH = 2;
     static auto rotateLine = [](std::array<Vector2, 2> line, RotationMat mat) -> std::array<Vector2, 2> {
         const auto pt1 = applyRotation(line[0], mat);
         const auto pt2 = applyRotation(line[1], mat);
         return { pt1, pt2 };
     };
 
-    line1 = rotateLine(line1, mat);
-    line2 = rotateLine(line2, mat);
+    // Edge case is when both lines are very far away from vertical.
+    const int bothLinesOk = !(std::abs(dy1 / dx1) < VERT_ENOUGH && std::abs(dy2 / dx2) < VERT_ENOUGH);
+    RotationMat mat, invMat;
 
-    const auto movingPointLine = newLine(line1);
-    const auto sideLine = newLine(line2);
+    if (bothLinesOk) {
+        // cross multiplication comparison of the slopes
+        if (std::abs(dy1 * dx2) > std::abs(dx1 * dy1)) {
+            std::cout << "lineSeg1 is closer to vertical\n";
+            
+            if (dx2 < 0) {
+                mat = PI_OVER_4_MAT;
+                invMat = NEG_PI_OVER_4_MAT;
+            } else {
+                mat = NEG_PI_OVER_4_MAT;
+                invMat = PI_OVER_4_MAT;
+            }
+        } else {
+            std::cout << "lineSeg2 is closer to vertical\n";
+
+            if (dx1 < 0) {
+                mat = PI_OVER_4_MAT;
+                invMat = NEG_PI_OVER_4_MAT;
+            } else {
+                mat = NEG_PI_OVER_4_MAT;
+                invMat = PI_OVER_4_MAT;
+            }
+        }
+
+        lineSeg1 = rotateLine(lineSeg1, mat);
+        lineSeg2 = rotateLine(lineSeg2, mat);
+    }
+
+    const auto movingPointLine = newLine(lineSeg1);
+    const auto sideLine = newLine(lineSeg2);
+    std::cout << "movingPointLine " << movingPointLine.toString() << "\n";
+    std::cout << "sideLine " << sideLine.toString() << "\n";
     const double x = (movingPointLine.b - sideLine.b) / (sideLine.m - movingPointLine.m);
     const double y = sideLine.m * x + sideLine.b;
 
-    return applyRotation({ x, y }, invMat);
+    return bothLinesOk ? applyRotation({ x, y }, invMat) : Vector2 { x, y };
 }
 
 // This is how I've been doing it so far, but it makes an assumption about veritcality and the more vertical something is without being detected as vertical, the more inaccurate the intersection is.
 
-Vector2 verticalEdgeCaseMethod(const std::array<Vector2, 2> line1, const std::array<Vector2, 2> line2) {
-    std::cout << line1[0].toString() << " " << line1[1].toString() << " " << line2[0].toString() << " " << line2[1].toString() << "\n";
+Vector2 verticalEdgeCaseMethod(const std::array<Vector2, 2> lineSeg1, const std::array<Vector2, 2> lineSeg2) {
+    std::cout << lineSeg1[0].toString() << " " << lineSeg1[1].toString() << " " << lineSeg2[0].toString() << " " << lineSeg2[1].toString() << "\n";
      // To deal with if the side is vertical
-    if (std::abs(line2[0].x - line2[1].x) / std::abs(line2[0].y - line2[1].y) < 0.01) {
-        const auto movingPointLine = newLine(line1);
-        const double x = line2[0].x;
+    if (std::abs(lineSeg2[0].x - lineSeg2[1].x) / std::abs(lineSeg2[0].y - lineSeg2[1].y) < 0.01) {
+        const auto movingPointLine = newLine(lineSeg1);
+        const double x = lineSeg2[0].x;
         const double y = movingPointLine.m * x + movingPointLine.b;
         return { x, y };
     }
 
-    const auto movingPointLine = newLine(line1);
-    const auto sideLine = newLine(line2);
+    const auto movingPointLine = newLine(lineSeg1);
+    const auto sideLine = newLine(lineSeg2);
     const double x = (movingPointLine.b - sideLine.b) / (sideLine.m - movingPointLine.m);
     const double y = sideLine.m * x + sideLine.b;
     return { x, y };
@@ -98,6 +105,7 @@ int main() {
             { Vector2 { 0, 0 }, { 1, 1 } },
             { Vector2 { 1, -1 }, { 0, 0 } }
         },
+        // This is an edge case.
         {
             std::array<Vector2, 2> 
             { Vector2 { 0, 0 }, { 1, 1 } },
