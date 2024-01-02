@@ -23,12 +23,12 @@ Vector2 rotationMatMethod(std::array<Vector2, 2> lineSeg1, std::array<Vector2, 2
     };
 
     // Edge case is when both lines are very far away from vertical.
-    const int bothLinesOk = !(std::abs(dy1 / dx1) < VERT_ENOUGH && std::abs(dy2 / dx2) < VERT_ENOUGH);
+    const int bothLinesOk = (dx1 == 0 || dx2 == 0) ? 1 : !(std::abs(dy1 / dx1) < VERT_ENOUGH && std::abs(dy2 / dx2) < VERT_ENOUGH);
     RotationMat mat, invMat;
 
     if (bothLinesOk) {
         // cross multiplication comparison of the slopes
-        if (std::abs(dy1 * dx2) > std::abs(dx1 * dy1)) {
+        if (std::abs(dy1 * dx2) > std::abs(dx1 * dy2)) {
             std::cout << "lineSeg1 is closer to vertical\n";
             
             if (dx2 < 0) {
@@ -108,8 +108,8 @@ int main() {
         // This is an edge case.
         {
             std::array<Vector2, 2> 
-            { Vector2 { 0, 0 }, { 1, 1 } },
-            { Vector2 { 0, 0 }, { 1, -1 } }
+            { Vector2 { 0, 1 }, { 1, 2 } },
+            { Vector2 { 0, 1 }, { 1, 0 } }
         },
     };
 
